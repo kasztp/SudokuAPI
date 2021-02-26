@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+<body>
+    {% block content %}
+        <div class="card mx-auto " style="height: 50%; margin: 50px; padding: 50px;">
+
+            <h1>Endpoint</h1>
+
+            <div>
+                /v1/solve
+            </div>
+
+            <h1>Input example</h1>
+
+            <pre><code>
+            {
+                "payload": "900000000060000000027008000000000307890300000301020580000100800080075602010600009"
+            }
+            </code></pre>
+
+            <h1>Output example</h1>
+
+            <pre><code>
+            {
+                "original": "900000000060000000027008000000000307890300000301020580000100800080075602010600009",
+                "solved": "938764125564291738127538964245816397896357241371429586659142873483975612712683459",
+                "iterations": 5876,
+                "passes": 2
+            }
+            </code></pre>
+
+        </div>
+    {% endblock %}
+</body>
