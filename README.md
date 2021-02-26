@@ -1,6 +1,6 @@
 # Sudoku API
 
-Quick & dirty scrabble solver api experiement with Flask
+Quick & dirty sudoku solver api experiement with Flask
 
 ## Authors
 
