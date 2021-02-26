@@ -1,5 +1,5 @@
-from flask import render_template, request
 from math import sqrt
+from flask import render_template, request
 from app import app
 from .solver.sudoku_solver import Board
 
