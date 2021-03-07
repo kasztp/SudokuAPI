@@ -11,8 +11,8 @@ class Board:
         self.box_size = box_size
         self.dimensions = dimensions
         self.iterations = 0
-        self.cues = self.set_cues()
-        self.mc_cues = self.set_mc_cues()
+        self.clues = self.set_clues()
+        self.most_common_clues = self.set_most_common_clues()
         self.mask = self.create_mask()
 
     def __repr__(self):
@@ -58,10 +58,11 @@ class Board:
         return None
 
     def find_min_empty(self):
+        # Find empty field where the number of possible valid values is the smallest
         def is_list(item):
             return bool(isinstance(item, list))
 
-        min_len_list = [0, [1, 2, 3, 4, 5, 6, 7, 8, 9]]
+        min_len_list = [0, list(range(1, self.size + 1))]
         for i, row in enumerate(self.mask):
             if len(list(filter(is_list, row))) >= 1:
                 sorted_sets = sorted(filter(is_list, row), key=len)
@@ -72,31 +73,31 @@ class Board:
                             min_len_list[1] = sorted_sets[j]
                             break
 
-        if min_len_list != [0, [1, 2, 3, 4, 5, 6, 7, 8, 9]]:
+        if min_len_list != [0, list(range(1, self.size + 1))]:
             return min_len_list[0], self.mask[min_len_list[0]].index(min_len_list[1])  # row, col
         else:
             return self.find_empty()
 
-    def set_cues(self):
-        cues = []
-        cue_dict = dict()
+    def set_clues(self):
+        clues = []
+        clue_dict = dict()
         for row in self.board:
             for number in row:
                 if number != 0:
-                    cues.append(number)
+                    clues.append(number)
         for i in range(self.dimensions[0], self.dimensions[1]):
-            cue_dict[i] = cues.count(i)
-        return cue_dict
+            clue_dict[i] = clues.count(i)
+        return clue_dict
 
-    def set_mc_cues(self):
-        mc_cues = []
-        for item in sorted(self.cues.items(), key=lambda x: x[1], reverse=True):
-            mc_cues.append(item[0])
-        if len(mc_cues) < 9:
-            missing = set(range(1, self.dimensions[1])).difference(mc_cues)
+    def set_most_common_clues(self):
+        mc_clues = []
+        for item in sorted(self.clues.items(), key=lambda x: x[1], reverse=True):
+            mc_clues.append(item[0])
+        if len(mc_clues) < 9:
+            missing = set(range(1, self.dimensions[1])).difference(mc_clues)
             print(f"Missing: {missing}")
-            mc_cues += missing
-        return mc_cues
+            mc_clues += missing
+        return mc_clues
 
     def create_mask(self):
         mask = deepcopy(self.board)
@@ -118,8 +119,8 @@ class Board:
         def masking(item):
             return bool(isinstance(item, set) and len(item) > 1)
 
-        self.cues = self.set_cues()
-        self.mc_cues = self.set_mc_cues()
+        self.clues = self.set_clues()
+        self.most_common_clues = self.set_most_common_clues()
         for i, row in enumerate(self.mask):
             for numbers in filter(masking, row):
                 x_pos = row.index(numbers)
@@ -130,7 +131,7 @@ class Board:
                         to_remove.add(number)
                 for num in to_remove:
                     self.mask[i][x_pos].remove(num)
-                for num in self.mc_cues:
+                for num in self.most_common_clues:
                     if num in self.mask[i][x_pos]:
                         to_mask.append(num)
                 self.mask[i][x_pos] = to_mask
@@ -166,10 +167,10 @@ class Board:
         else:
             row, col = pick
 
-        for i in self.mask[row][col]:
-            # ^ Only check for numbers in mask in the order of most common cues
-            if self.valid(i, (row, col)):
-                self.board[row][col] = i
+        for number in self.mask[row][col]:
+            # ^ Only check for numbers in mask, in the order of most common cues
+            if self.valid(number, (row, col)):
+                self.board[row][col] = number
 
                 if self.solve():
                     return True
@@ -178,16 +179,32 @@ class Board:
 
         return False
 
+    def validate_clue(self, num, pos):
+        # Check row
+        if self.board[pos[0]].count(num) > 1:
+            return False
 
-def batch_preprocess(item):
-    start_time = time()
-    passes = item.preprocess_board()
-    execution_time = time() - start_time
-    return passes, execution_time, item
+        # Check column
+        column = [item[pos[1]] for item in self.board]
+        del column[pos[0]]
+        if num in column:
+            return False
 
+        # Check box
+        box_x = pos[1] // self.box_size
+        box_y = pos[0] // self.box_size
 
-def batch_solve(challenge):
-    start_time = time()
-    challenge.solve()
-    execution_time = time() - start_time
-    return execution_time, challenge
+        for i in range(box_y * self.box_size, box_y * self.box_size + self.box_size):
+            if num in self.board[i][box_x * self.box_size: box_x * self.box_size + self.box_size] \
+                    and (i, self.board[i].index(num)) != pos:
+                return False
+
+        return True
+
+    def check_solvable(self):
+        for i, row in enumerate(self.board):
+            for j, value in enumerate(row):
+                if value in list(range(1, self.size + 1)):
+                    if not self.validate_clue(value, (i, j)):
+                        return False
+        return True
