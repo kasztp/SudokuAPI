@@ -23,6 +23,11 @@ def not_found(error):
     return {'error': 'Not found'}, 404
 
 
+@app.errorhandler(405)
+def not_found(error):
+    return {'error': 'HTTP Method Not allowed'}, 405
+
+
 @app.route('/')
 def root():
     return render_template('index.html', title='SudokuAPI Documentation')
@@ -96,5 +101,5 @@ def check():
 
 @app.route('/v1/generate', methods=["GET"])
 def generate():
-    pass
     # TODO To be implemented
+    pass
