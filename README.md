@@ -2,6 +2,8 @@
 
 Quick & dirty sudoku solver api experiement with Flask
 
+Demo: https://1y3m54kas3.execute-api.us-east-1.amazonaws.com/dev
+
 ## Authors
 
 * **Peter Kaszt** - *Initial work*
