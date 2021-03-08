@@ -1,6 +1,4 @@
 # Sudoku board Class and solver logic
-
-from time import time
 from copy import deepcopy
 
 
