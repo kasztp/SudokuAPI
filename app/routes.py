@@ -1,5 +1,5 @@
 from math import sqrt
-from flask import render_template, request
+from flask import abort, render_template, request
 from app import app
 from .solver.sudoku_solver import Board
 
@@ -18,14 +18,21 @@ def parse_payload(data):
     return Board(board, size, box_size, dimensions)
 
 
+@app.errorhandler(404)
+def not_found(error):
+    return {'error': 'Not found'}, 404
+
+
 @app.route('/')
 def root():
     return render_template('index.html', title='SudokuAPI Documentation')
 
 
-@app.route('/v1/solve', methods=["GET", "POST"])
+@app.route('/v1/solve', methods=["POST"])
 def solve():
     data = request.get_json(silent=True)
+    if not request.json or 'payload' not in request.json:
+        abort(400)
     if not sqrt(len(data["payload"])).is_integer():
         response = {
             "error": "Invalid input length or non square board size.",
@@ -58,9 +65,11 @@ def solve():
         return response
 
 
-@app.route('/v1/check', methods=["GET", "POST"])
+@app.route('/v1/check', methods=["POST"])
 def check():
     data = request.get_json(silent=True)
+    if not request.json or 'payload' not in request.json:
+        abort(400)
     if not sqrt(len(data["payload"])).is_integer():
         response = {
             "original": data["payload"],
@@ -85,7 +94,7 @@ def check():
     return response
 
 
-@app.route('/v1/generate', methods=["GET", "POST"])
+@app.route('/v1/generate', methods=["GET"])
 def generate():
     pass
     # TODO To be implemented

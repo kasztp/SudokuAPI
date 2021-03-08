@@ -1,0 +1,10 @@
+{
+    "dev": {
+        "app_function": "sudokuapi.app",
+        "profile_name": "default",
+        "project_name": "sudokuapi",
+        "runtime": "python3.8",
+        "s3_bucket": "zappa-sudokuapi",
+        "aws_region": "us-east-1"
+    }
+}
