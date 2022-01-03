@@ -1,11 +1,13 @@
+""" Routes for the Sudoku Solver API. """
 from math import sqrt
-from flask import abort, escape, render_template, request
 from random import randint
+from flask import abort, escape, render_template, request
 from app import app
 from .solver.sudoku_solver import Board
 
 
 def parse_payload(data):
+    """ Helper function to parse incoming payload. """
     size = int(sqrt(len(data)))
     box_size = int(sqrt(size))
     dimensions = (1, size + 1)
@@ -17,6 +19,35 @@ def parse_payload(data):
             board.append(row)
             row = []
     return Board(board, size, box_size, dimensions)
+
+
+def generate_sudoku(size):
+    """ Function to generate size*size square Sudoku puzzle. """
+    box_size = int(sqrt(size))
+    dimensions = (1, size + 1)
+    solvable = False
+    iterations = 0
+    while not solvable:
+        iterations += 1
+
+        board = [[0 for _ in range(0, 9)] for _ in range(0, 9)]
+        temp_board = Board(board, size, box_size, dimensions)
+        temp_board.generate()
+
+        for i, row in enumerate(temp_board.board):
+            for j, number in enumerate(row):
+                choice = randint(0, 1)
+                if choice:
+                    temp_board.board[i][j] = 0
+
+        number_of_clues = len([x for x in row if x != 0 for row in temp_board.board])
+        if number_of_clues < 17 or number_of_clues > 30:
+            continue
+        challenge = ''
+        for row in temp_board.board:
+            for number in row:
+                challenge += (str(number))
+        return challenge, iterations
 
 
 @app.errorhandler(404)
@@ -36,6 +67,7 @@ def root():
 
 @app.route('/v1/solve', methods=["POST"])
 def solve():
+    """ Route to return solved Sudoku puzzle. """
     data = request.get_json(silent=True)
     if not request.json or 'payload' not in request.json:
         abort(400)
@@ -76,6 +108,7 @@ def solve():
 
 @app.route('/v1/check', methods=["POST"])
 def check():
+    """ Route to check if a board seems to be solvable or not. - To be improved! """
     data = request.get_json(silent=True)
     if not request.json or 'payload' not in request.json:
         abort(400)
@@ -108,37 +141,11 @@ def check():
 
 @app.route('/v1/generate', methods=["GET"])
 def generate():
-    # Initial version - to be improved & optimized
+    """ Route to return a random Sudoku puzzle. """
     size = 9
-    box_size = int(sqrt(size))
-    dimensions = (1, size + 1)
-    board = []
-    row = []
-    solvable = False
-    iterations = 0
-    while not solvable:
-        iterations += 1
-        for i in range(90):
-            number = randint(0, 9)
-            if number not in row:
-                row.append(number)
-            else:
-                row.append(0)
-            if (i + 1) % size == 0:
-                board.append(row)
-                row = []
-        print(board)
-        temp_board = Board(board, size, box_size, dimensions)
-        print(temp_board)
-        if temp_board.check_solvable():
-            solvable = True
-            challenge = ''
-            for row in temp_board.board:
-                for number in row:
-                    challenge += (str(number))
-            response = {
-                "sudoku": challenge,
-                "iterations": iterations,
-            }
-            return response
-    pass
+    challenge, iterations = generate_sudoku(size)
+    response = {
+        "sudoku": challenge,
+        "iterations": iterations,
+    }
+    return response

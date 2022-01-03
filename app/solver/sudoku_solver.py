@@ -1,8 +1,10 @@
 """ Sudoku board Class and solver logic. """
 from copy import deepcopy
+from random import choice
 
 
 class Board:
+    """ Class to represent Sudoku board, with various attributes and methods necessary for solving. """
     def __init__(self, board, size, box_size, dimensions):
         self.board = board
         self.size = size
@@ -30,7 +32,7 @@ class Board:
         return to_print
 
     def valid(self, num, pos):
-        """ Check if a given value is valid for the current position. """
+        """ Method to check if a given value is valid for the current position. """
         # Check row
         if num in self.board[pos[0]]:
             return False
@@ -51,14 +53,15 @@ class Board:
         return True
 
     def find_empty(self):
-        """ Find empty field on board. """
+        """ Method to find empty field on board. """
         for i, row in enumerate(self.board):
             if 0 in row:
-                return i, row.index(0)  # row, col
+                return i, row.index(0)  # row, column
         return None
 
     def find_min_empty(self):
-        """ Find empty field where the number of possible valid values is the smallest. """
+        """ Method to find empty field where
+            the number of possible valid values is the smallest. """
         def is_list(item):
             return bool(isinstance(item, list))
 
@@ -75,12 +78,11 @@ class Board:
 
         if min_len_list != [0, list(range(1, self.size + 1))]:
             return min_len_list[0], self.mask[min_len_list[0]].index(min_len_list[1])  # row, col
-        else:
-            return self.find_empty()
+        return self.find_empty()
 
     def find_min_empty_new(self) -> tuple[int, int] or None:
-        """ Find empty location to be filled in Sudoku,
-        where the number of possible values is optimal. """
+        """ Method to find empty location to be filled in Sudoku,
+            where the number of possible values is optimal. """
 
         def not_zero_element_list(item):
             return bool(isinstance(item, list) and len(item) != 0)
@@ -101,9 +103,9 @@ class Board:
         return self.find_empty()
 
     def set_clues(self):
-        """ Set clues for Board. """
+        """ Method to set clues for Board. """
         clues = []
-        clue_dict = dict()
+        clue_dict = {}
         for row in self.board:
             for number in row:
                 if number != 0:
@@ -113,7 +115,7 @@ class Board:
         return clue_dict
 
     def set_most_common_clues(self):
-        """ Calculate most common clues on the Board. """
+        """ Method to calculate most common clues on the Board. """
         mc_clues = []
         for item in sorted(self.clues.items(), key=lambda x: x[1], reverse=True):
             mc_clues.append(item[0])
@@ -124,46 +126,46 @@ class Board:
         return mc_clues
 
     def create_mask(self):
-        """ Create Mask of possible values for the sudoku. """
+        """ Method to create Mask of possible valid values for quicker solving. """
         mask = deepcopy(self.board)
         for i, row in enumerate(mask):
             if 0 in row:
                 while 0 in row:
                     zero_index = row.index(0)
-                    mask[i][zero_index] = set()
+                    mask[i][zero_index] = []
                     for number in range(self.dimensions[0], self.dimensions[1]):
                         if self.valid(number, (i, zero_index)):
-                            mask[i][zero_index].add(number)
+                            mask[i][zero_index].append(number)
             else:
                 for number in row:
                     if number != 0:
-                        mask[i][row.index(number)] = {number}
+                        mask[i][row.index(number)] = [number]
         return mask
 
     def update_mask(self):
-        """ Update Mask of possible values. """
-        def masking(item):
-            return bool(isinstance(item, set) and len(item) > 1)
+        """ Method to update Mask of possible values based on actual Board status. """
+        def is_more_than_one_long_list(item):
+            return bool(isinstance(item, list) and len(item) > 1)
 
-        for i, row in enumerate(self.mask):
-            for numbers in filter(masking, row):
+        for y_pos, row in enumerate(self.mask):
+            for numbers in filter(is_more_than_one_long_list, row):
                 x_pos = row.index(numbers)
                 to_mask = list()
                 to_remove = set()
                 for number in numbers:
-                    if not self.valid(number, (i, x_pos)):
+                    if not self.valid(number, (y_pos, x_pos)):
                         to_remove.add(number)
                 for num in to_remove:
-                    self.mask[i][x_pos].remove(num)
+                    self.mask[y_pos][x_pos].remove(num)
                 for num in self.most_common_clues:
-                    if num in self.mask[i][x_pos]:
+                    if num in self.mask[y_pos][x_pos]:
                         to_mask.append(num)
-                self.mask[i][x_pos] = to_mask
+                self.mask[y_pos][x_pos] = to_mask
 
     def update_board(self):
-        """ Update Board based on Mask of possible values. """
+        """ Method to update Board based on Mask of possible valid values. """
         def masking(item):
-            return bool(isinstance(item, set) and len(item) == 1)
+            return bool(isinstance(item, list) and len(item) == 1)
 
         for i, row in enumerate(self.mask):
             for number in filter(masking, row):
@@ -173,7 +175,7 @@ class Board:
                 self.mask[i][x_pos] = num
 
     def preprocess_board(self):
-        """ Preprocess Board before solving with backtracking. """
+        """ Method to preprocess Board before solving with backtracking. """
         temp_board = deepcopy(self)
         temp_board.mask = None
         passes = 0
@@ -186,13 +188,12 @@ class Board:
         return passes
 
     def solve(self):
-        """ Solve Board with backtracking. """
+        """ Method to solve Board with backtracking. """
         self.iterations += 1
         pick = self.find_min_empty_new()
         if not pick:
             return True
-        else:
-            row, col = pick
+        row, col = pick
 
         for number in self.mask[row][col]:
             # ^ Only check for numbers in mask, in the order of most common cues
@@ -201,13 +202,29 @@ class Board:
 
                 if self.solve():
                     return True
-
                 self.board[row][col] = 0
+        return False
 
+    def generate(self):
+        """ Method to generate filled Board with backtracking. """
+        self.iterations += 1
+        pick = self.find_empty()
+        if not pick:
+            return True
+        row, col = pick
+
+        for _ in self.mask[row][col]:
+            num = choice(list(self.mask[row][col]))
+            if self.valid(num, (row, col)):
+                self.board[row][col] = num
+                if self.solve():
+                    return True
+                self.board[row][col] = 0
         return False
 
     def validate_clue(self, num, pos):
-        """ Function to check if a given clue is valid for the given position in the given board. """
+        """ Method to check if a given clue is valid
+            for the given position on the board. """
         # Check row
         if self.board[pos[0]].count(num) > 1:
             return False
@@ -230,7 +247,7 @@ class Board:
         return True
 
     def check_solvable(self):
-        """ Function to check if a sudoku is possibly solvable. """
+        """ Method to check if a sudoku is possibly solvable. - To be improved!"""
         for i, row in enumerate(self.board):
             for j, value in enumerate(row):
                 if value in list(range(1, self.size + 1)):
