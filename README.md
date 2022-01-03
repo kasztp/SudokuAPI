@@ -2,7 +2,7 @@
 
 Quick & dirty sudoku solver api experiment with Flask
 
-Demo (AWS Lambda): https://1y3m54kas3.execute-api.us-east-1.amazonaws.com/dev
+Demo (AWS Lambda): https://1y3m54kas3.execute-api.us-east-1.amazonaws.com/dev (Older version)
 
 ## Authors
 
