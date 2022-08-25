@@ -4,8 +4,48 @@ from random import choice
 
 
 class Board:
-    """ Class to represent Sudoku board, with various attributes and methods necessary for solving. """
-    def __init__(self, board, size, box_size, dimensions):
+    """ Class to represent Sudoku board, with various attributes and methods necessary for solving.
+
+    Attributes
+    ----------
+    board : list[list[int]]
+        2D list representing the Sudoku board.
+    size : int
+        Size of the board.
+    box_size : int
+        Size of the box.
+    dimensions : tuple[int]
+        Dimensions of the board.
+    iterations : int
+        Number of iterations the solver has gone through.
+    clues : dict[int, int]
+        Dictionary of clues on the board.
+    most_common_clues : list[int]
+        List of most common clues on the board.
+    mask : list[list[list[int]]]
+        2D list representing the possible valid values mask of the board.
+
+    Methods
+    -------
+    __repr__(self)
+        Returns a string representation of the board.
+    valid(self, num, pos)
+        Checks if a given value is valid for the current position.
+    find_empty(self)
+        Finds the empty field on the board.
+    find_min_empty(self)
+        Finds the empty field on the board with the smallest number of possible values.
+    find_min_empty_new(self)
+        Finds the empty field on the board with the optimal number of possible values.
+    set_clues(self)
+        Sets the clues on the board.
+    set_most_common_clues(self)
+        Finds and sets the most common clues on the board.
+    create_mask(self)
+        Creates the mask of possible valid values for the board.
+
+    """
+    def __init__(self, board: list[list[int]], size: int, box_size: int, dimensions: tuple[int]):
         self.board = board
         self.size = size
         self.box_size = box_size
@@ -31,8 +71,23 @@ class Board:
                     to_print += str(self.board[i][j]) + ' '
         return to_print
 
-    def valid(self, num, pos):
-        """ Method to check if a given value is valid for the current position. """
+    def valid(self, num: int, pos: tuple[int, int]) -> bool:
+        """ Method to check if a given value is valid for the current position.
+            Returns True if valid, False otherwise.
+
+            Parameters
+            ----------
+            num : int
+                Value to check.
+            pos : tuple[int, int]
+                Position to check.
+
+            Returns
+            -------
+            bool
+                True if valid, False otherwise.
+
+            """
         # Check row
         if num in self.board[pos[0]]:
             return False
@@ -52,16 +107,33 @@ class Board:
 
         return True
 
-    def find_empty(self):
-        """ Method to find empty field on board. """
+    def find_empty(self) -> tuple[int, int] or None:
+        """ Method to find empty field on board.
+
+            Returns
+            -------
+            tuple[int, int]
+                Row, col of empty field.
+            None
+                If no empty field found.
+
+            """
         for i, row in enumerate(self.board):
             if 0 in row:
                 return i, row.index(0)  # row, column
         return None
 
-    def find_min_empty(self):
-        """ Method to find empty field where
-            the number of possible valid values is the smallest. """
+    def find_min_empty(self) -> tuple[int, int] or None:
+        """ Method to find empty field where the number of possible valid values is the smallest.
+
+            Returns
+            -------
+            tuple[int, int]
+                Row, col of empty field.
+            None
+                If no empty field found.
+
+            """
         def is_list(item):
             return bool(isinstance(item, list))
 
@@ -82,9 +154,19 @@ class Board:
 
     def find_min_empty_new(self) -> tuple[int, int] or None:
         """ Method to find empty location to be filled in Sudoku,
-            where the number of possible values is optimal. """
+            where the number of possible values is optimal.
 
-        def not_zero_element_list(item):
+            Returns
+            -------
+            tuple[int, int]
+                Row, col of empty field.
+            None
+                If no empty field found.
+
+            """
+
+        def not_zero_element_list(item) -> bool:
+            """ Returns True if item is a list with at least one element. """
             return bool(isinstance(item, list) and len(item) != 0)
 
         shortest_cue_lists = {}
@@ -102,8 +184,9 @@ class Board:
 
         return self.find_empty()
 
-    def set_clues(self):
-        """ Method to set clues for Board. """
+    def set_clues(self) -> dict[int: int]:
+        """ Method to set clues for Board.
+            Returns a dictionary with clues and clue counts. """
         clues = []
         clue_dict = {}
         for row in self.board:
@@ -114,7 +197,7 @@ class Board:
             clue_dict[i] = clues.count(i)
         return clue_dict
 
-    def set_most_common_clues(self):
+    def set_most_common_clues(self) -> list[int]:
         """ Method to calculate most common clues on the Board. """
         mc_clues = []
         for item in sorted(self.clues.items(), key=lambda x: x[1], reverse=True):
@@ -125,7 +208,7 @@ class Board:
             mc_clues += missing
         return mc_clues
 
-    def create_mask(self):
+    def create_mask(self) -> list[list[list[int]]]:
         """ Method to create Mask of possible valid values for quicker solving. """
         mask = deepcopy(self.board)
         for i, row in enumerate(mask):
@@ -199,7 +282,6 @@ class Board:
             # ^ Only check for numbers in mask, in the order of most common cues
             if self.valid(number, (row, col)):
                 self.board[row][col] = number
-
                 if self.solve():
                     return True
                 self.board[row][col] = 0
@@ -222,9 +304,23 @@ class Board:
                 self.board[row][col] = 0
         return False
 
-    def validate_clue(self, num, pos):
+    def validate_clue(self, num: int, pos: tuple[int, int]) -> bool:
         """ Method to check if a given clue is valid
-            for the given position on the board. """
+            for the given position on the board.
+        
+            Parameters
+            ----------
+            num : int
+                Clue to check.
+            pos : tuple[int, int]
+                Position to check.
+            
+            Returns
+            -------
+            bool
+                True if clue is valid, False otherwise.
+            
+            """
         # Check row
         if self.board[pos[0]].count(num) > 1:
             return False
