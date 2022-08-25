@@ -1,4 +1,4 @@
-# Sudoku API [![Pylint](https://github.com/kasztp/SudokuAPI/actions/workflows/pylint.yml/badge.svg)](https://github.com/kasztp/SudokuAPI/actions/workflows/pylint.yml)
+# Sudoku API [![Pylint](https://github.com/kasztp/SudokuAPI/actions/workflows/pylint.yml/badge.svg)](https://github.com/kasztp/SudokuAPI/actions/workflows/pylint.yml) [![Pytest](https://github.com/kasztp/SudokuAPI/actions/workflows/pytest.yml/badge.svg)](https://github.com/kasztp/SudokuAPI/actions/workflows/pytest.yml)
 
 Quick & dirty sudoku solver api experiment with Flask
 
