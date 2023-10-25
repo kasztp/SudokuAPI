@@ -8,3 +8,4 @@ __pycache__/
 venv/
 
 *.csv
+tests/.DS_Store
